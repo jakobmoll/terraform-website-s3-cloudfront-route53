@@ -42,11 +42,11 @@ resource "aws_s3_bucket" "website_bucket" {
   policy        = data.template_file.bucket_policy.rendered
   force_destroy = var.force_destroy
 
-  website {
-    index_document = "index.html"
-    error_document = "404.html"
-    routing_rules  = var.routing_rules
-  }
+#  website {
+#    index_document = "index.html"
+#    error_document = "404.html"
+#    routing_rules  = var.routing_rules
+#  }
 
   //  logging {
   //    target_bucket = "${var.log_bucket}"
@@ -54,6 +54,18 @@ resource "aws_s3_bucket" "website_bucket" {
   //  }
 
   tags = local.tags
+}
+
+resource "aws_s3_bucket_website_configuration" "website-configuration" {
+  bucket = aws_s3_bucket.website_bucket.bucket
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "404.html"
+  }
 }
 
 ################################################################################################################
