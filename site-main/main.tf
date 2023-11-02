@@ -41,12 +41,24 @@ resource "aws_s3_bucket" "website_bucket" {
   bucket        = var.bucket_name
   force_destroy = var.force_destroy
 
-#  lifecycle {
-#    ignore_changes = [
-#      website
-#    ]
-#  }
+  lifecycle {
+    ignore_changes = [
+      website
+    ]
+  }
   tags = local.tags
+}
+
+resource "aws_s3_bucket_website_configuration" "website" {
+  bucket = aws_s3_bucket.website_bucket.bucket
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "404.html"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "website_bucket" {
@@ -115,7 +127,7 @@ resource "aws_cloudfront_distribution" "website_cdn" {
 
   origin {
     origin_id   = "origin-bucket-${aws_s3_bucket.website_bucket.id}"
-    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
+    domain_name = aws_s3_bucket.website_bucket.website_endpoint
 
     custom_origin_config {
       origin_protocol_policy = "http-only"
@@ -175,6 +187,6 @@ resource "aws_cloudfront_distribution" "website_cdn" {
     minimum_protocol_version = var.minimum_client_tls_protocol_version
   }
 
-  aliases = var.aliases
+  aliases = [var.domain]
   tags    = local.tags
 }
