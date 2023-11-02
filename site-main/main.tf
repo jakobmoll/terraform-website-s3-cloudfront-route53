@@ -42,6 +42,11 @@ resource "aws_s3_bucket" "website_bucket" {
   policy        = data.template_file.bucket_policy.rendered
   force_destroy = var.force_destroy
 
+  lifecycle {
+    ignore_changes = [
+      website
+    ]
+  }
 #  website {
 #    index_document = "index.html"
 #    error_document = "404.html"
