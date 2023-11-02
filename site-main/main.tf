@@ -39,39 +39,42 @@ data "template_file" "bucket_policy" {
 
 resource "aws_s3_bucket" "website_bucket" {
   bucket        = var.bucket_name
-  policy        = data.template_file.bucket_policy.rendered
   force_destroy = var.force_destroy
 
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
-#  website {
-#    index_document = "index.html"
-#    error_document = "404.html"
-#    routing_rules  = var.routing_rules
+#  lifecycle {
+#    ignore_changes = [
+#      website
+#    ]
 #  }
-
-  //  logging {
-  //    target_bucket = "${var.log_bucket}"
-  //    target_prefix = "${var.log_bucket_prefix}"
-  //  }
-
   tags = local.tags
 }
 
-resource "aws_s3_bucket_website_configuration" "website-configuration" {
-  bucket = aws_s3_bucket.website_bucket.bucket
+resource "aws_s3_bucket_public_access_block" "website_bucket" {
+  bucket = aws_s3_bucket.website_bucket.id
 
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "404.html"
-  }
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
+
+resource "aws_s3_bucket_ownership_controls" "s3_bucket_acl_ownership" {
+  bucket = aws_s3_bucket.website_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+  depends_on = [aws_s3_bucket_public_access_block.website_bucket]
+}
+
+resource "aws_s3_bucket_policy" "website" {
+  bucket = aws_s3_bucket.website_bucket.id
+  policy = data.template_file.bucket_policy.rendered
+
+  depends_on = [aws_s3_bucket_public_access_block.website_bucket]
+}
+
+
+
 
 ################################################################################################################
 ## Configure the credentials and access to the bucket for a deployment user
