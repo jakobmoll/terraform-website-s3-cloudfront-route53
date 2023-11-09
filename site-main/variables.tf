@@ -8,7 +8,6 @@ variable "domain" {
 
 variable "aliases" {
   type    = list(string)
-  default = []
 }
 
 variable "bucket_name" {
